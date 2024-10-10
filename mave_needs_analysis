@@ -1,0 +1,826 @@
+##MAVE needs survey analysis 
+##input data downloaded from redcap 02.04.24
+##base annotation datasets in data folder
+##Author Rehan Villani - created v2 28.06.24
+
+#Clear existing data and graphics
+rm(list=ls())
+graphics.off()
+#Load Hmisc library
+library(Hmisc)
+library(tidyverse)
+library(GenomicRanges)
+library(cowplot)
+library(RColorBrewer)
+library(wesanderson)
+
+#set up files--------------------------------------------
+#setwd 
+date = strftime(Sys.Date(),"%y%m%d")
+
+#Read Data
+#needs survey data  exported from redcap 02.04.2024
+#removed test/incomplete entries (row #1,2,3 and 5)
+#removed identifiers
+data=read.csv('TheMAVEEducationProj_DATA_2024-04-02_1501_clean.csv')
+
+##Setting Labels############################################
+label(data$record_id)="Record ID"
+label(data$activity_vc)="Variant classification for determining variant pathogenicity in a diagnostic setting"
+label(data$activity_r)="Variant classification for research purposes"
+label(data$activity_gr)="Returning genetic test results to patients as part of diagnostic process"
+label(data$activity_dr)="Discussing genetic test results with patients (but I am not responsible for returning the clinical diagnosis)"
+label(data$activity_mdt)="Participation in multidisciplinary meetings (Multidisciplinary Team Discussions, MTBs, or Molecular Tumour Boards, MTBs)"
+label(data$activity_ep)="Participation in a ClinGen expert panel, including a Gene Curation Expert Panel (GCEP) or a Variant Curation Expert Panel (VCEP)"
+label(data$fe_activity_pd)="Evaluate functional data from a publicly available datasource or publication for research purposes"
+label(data$fe_activity_cpd)="Curate functional evidence from a publicly available datasource or publication for the purpose of clinical variant classification"
+label(data$fe_activity_ca)="Use functional evidence as a catalyst to reassess a variant classification in the clinical setting"
+label(data$fe_activity_rfed)="Request functional evidence from a diagnostic accredited laboratory to inform clinical interpretation of a variant"
+label(data$fe_activity_rfer)="Request functional evidence from a research laboratory to inform clinical interpretation of a variant"
+label(data$activitiesfe_other_list)="Please list any additional functional evidence related activities that you perform now or may perform in the future."
+label(data$dontuse_reason)="If you do not directly apply functional data, how does variant classification or functional evidence impact your professional role?"
+label(data$fetype_ba)="Biochemical assays, for e.g. enzyme assays"
+label(data$fetype_ta)="Transcript assays, for e.g. splicing assays or transcriptome data"
+label(data$fetype_cm)="Cell models, for e.g. in vitro cell assay for cell survival"
+label(data$fetype_am)="Animal models, for e.g. mouse model of a genetic disease"
+label(data$fetype_mave)="High throughput functional assays, including MAVEs"
+label(data$fetype_other)="Are there any functional evidence categories not listed above that you would consider using in genetic variant classification?"
+label(data$sop___1)="Do you follow a policy or procedure that specifies how to incorporate functional evidence into genetic variant classification?  (choice=No)"
+label(data$sop___2)="Do you follow a policy or procedure that specifies how to incorporate functional evidence into genetic variant classification?  (choice=Yes - ACMG/AMP guidelines as per Richards et al 2015.)"
+label(data$sop___3)="Do you follow a policy or procedure that specifies how to incorporate functional evidence into genetic variant classification?  (choice=Yes - ACMG/AMP guidelines and Brnich et al 2020 guidelines for functional evidence)"
+label(data$sop___4)="Do you follow a policy or procedure that specifies how to incorporate functional evidence into genetic variant classification?  (choice=Yes - Internal SOP)"
+label(data$sop___5)="Do you follow a policy or procedure that specifies how to incorporate functional evidence into genetic variant classification?  (choice=Yes - Other)"
+label(data$sop___6)="Do you follow a policy or procedure that specifies how to incorporate functional evidence into genetic variant classification?  (choice=I do not know)"
+label(data$resource_q)="What resources do you use to source functional evidence for genetic variant classification?"
+label(data$res_brnich20)="Brnich et al. 2020 (Functional evidence recommendations)"
+label(data$res_walker23)="Walker et al. 2023 (Splicing recommendations)"
+label(data$res_mavedb)="MaveDB (Database of high throughput experimental data)"
+label(data$res_ave)="The Atlas of Variant Effects (AVE) Resources Page"
+label(data$res_sviws)="ClinGen SVI functional assay assessment worksheet"
+label(data$res_vcep)="VCEP specific guidance on functional evidence use"
+label(data$res_vepmave)="Ensembl VEP - MaveDB annotation"
+label(data$conflict)="How would you deal with conflicting evidence or results when using functional evidence for variant classification?"
+label(data$barrier___1)="Which of the following might prevent your use of functional evidence in variant classification? (choice=Lack of time)"
+label(data$barrier___2)="Which of the following might prevent your use of functional evidence in variant classification? (choice=Insufficient training)"
+label(data$barrier___3)="Which of the following might prevent your use of functional evidence in variant classification? (choice=Outside the scope of my role)"
+label(data$barrier___4)="Which of the following might prevent your use of functional evidence in variant classification? (choice=Cannot find functional data)"
+label(data$barrier___5)="Which of the following might prevent your use of functional evidence in variant classification? (choice=Lack of familiarity with specific assay)"
+label(data$barrier___6)="Which of the following might prevent your use of functional evidence in variant classification? (choice=The assay is too general (not gene-disease specific enough))"
+label(data$barrier___7)="Which of the following might prevent your use of functional evidence in variant classification? (choice=Other)"
+label(data$barrier_other)="If you selected other, please list what else might prevent your use of functional evidence use in variant classification."
+label(data$improve___1)="What would improve your interaction with and use of functional evidence (existing or not)? (choice=Education/training in functional evidence use)"
+label(data$improve___2)="What would improve your interaction with and use of functional evidence (existing or not)? (choice=Additional guidelines on functional evidence use)"
+label(data$improve___3)="What would improve your interaction with and use of functional evidence (existing or not)? (choice=Improved methods to source functional evidence)"
+label(data$improve___4)="What would improve your interaction with and use of functional evidence (existing or not)? (choice=Increased information on published functional data)"
+label(data$improve___5)="What would improve your interaction with and use of functional evidence (existing or not)? (choice=Improved access to commission creation of functional data)"
+label(data$improve___6)="What would improve your interaction with and use of functional evidence (existing or not)? (choice=Improved curation resourcing (more time/funding))"
+label(data$improve_other)="What else might improve your interaction with and use of functional evidence?"
+label(data$maveuse)="Where such data exist for a variant/gene of interest, how likely are you to use high throughput functional data (including MAVE data) in clinical classification of a genetic variant? "
+label(data$maveuse_why)="Why might you be unlikely to use high throughput functional data (including MAVE data) in clinical classification of a genetic variant?"
+label(data$mavedbuse)="What has been your interaction with MaveDB (Multiplexed Assays of Variant Effect Database)?"
+label(data$mave_comment)="If you know or have accessed MaveDB, please comment on your experience?"
+label(data$learn_q)="Would you be interested in training/further education and/or additional resources to support your use of functional evidence?"
+label(data$learn_how___1)="Which of the following training and/or additional resources would you use to increase/improve your use/understanding of applying functional evidence? (please select all that apply) (choice=Process guidelines)"
+label(data$learn_how___2)="Which of the following training and/or additional resources would you use to increase/improve your use/understanding of applying functional evidence? (please select all that apply) (choice=Expert guidance documents (for e.g. from Variant Curation Expert Panels))"
+label(data$learn_how___3)="Which of the following training and/or additional resources would you use to increase/improve your use/understanding of applying functional evidence? (please select all that apply) (choice=Peer reviewed recommendations)"
+label(data$learn_how___4)="Which of the following training and/or additional resources would you use to increase/improve your use/understanding of applying functional evidence? (please select all that apply) (choice=Tools to assist in functional assay evaluation)"
+label(data$learn_how___5)="Which of the following training and/or additional resources would you use to increase/improve your use/understanding of applying functional evidence? (please select all that apply) (choice=Professional development opportunities)"
+label(data$learn_how___6)="Which of the following training and/or additional resources would you use to increase/improve your use/understanding of applying functional evidence? (please select all that apply) (choice=Online learning resources)"
+label(data$learn_how___7)="Which of the following training and/or additional resources would you use to increase/improve your use/understanding of applying functional evidence? (please select all that apply) (choice=I would not access)"
+label(data$learn_how___8)="Which of the following training and/or additional resources would you use to increase/improve your use/understanding of applying functional evidence? (please select all that apply) (choice=Other?)"
+label(data$learn_how_other)="If you selected other, please list resources you would use to improve your use/understanding of functional evidence."
+label(data$learn_topic)="What aspects of functional evidence use would you like more understanding of?"
+label(data$dem_pos)="What is your primary professional position?"
+label(data$dem_pos_other)="Other - Please describe your primary professional position"
+label(data$dem_yrs)="How many years of professional experience do you have in your primary position?"
+
+#Setting Units
+
+#Setting Factors(will create new variable for factors)
+data$activity_vc.factor = factor(data$activity_vc,levels=c("0","1","2"))
+data$activity_r.factor = factor(data$activity_r,levels=c("0","1","2"))
+data$activity_gr.factor = factor(data$activity_gr,levels=c("0","1","2"))
+data$activity_dr.factor = factor(data$activity_dr,levels=c("0","1","2"))
+data$activity_mdt.factor = factor(data$activity_mdt,levels=c("0","1","2"))
+data$activity_ep.factor = factor(data$activity_ep,levels=c("0","1","2"))
+data$fe_activity_pd.factor = factor(data$fe_activity_pd,levels=c("0","1","2"))
+data$fe_activity_cpd.factor = factor(data$fe_activity_cpd,levels=c("0","1","2"))
+data$fe_activity_ca.factor = factor(data$fe_activity_ca,levels=c("0","1","2"))
+data$fe_activity_rfed.factor = factor(data$fe_activity_rfed,levels=c("0","1","2"))
+data$fe_activity_rfer.factor = factor(data$fe_activity_rfer,levels=c("0","1","2"))
+data$fetype_ba.factor = factor(data$fetype_ba,levels=c("1","2","3","4","5"))
+data$fetype_ta.factor = factor(data$fetype_ta,levels=c("1","2","3","4","5"))
+data$fetype_cm.factor = factor(data$fetype_cm,levels=c("1","2","3","4","5"))
+data$fetype_am.factor = factor(data$fetype_am,levels=c("1","2","3","4","5"))
+data$fetype_mave.factor = factor(data$fetype_mave,levels=c("1","2","3","4","5"))
+data$sop___1.factor = factor(data$sop___1,levels=c("0","1"))
+data$sop___2.factor = factor(data$sop___2,levels=c("0","1"))
+data$sop___3.factor = factor(data$sop___3,levels=c("0","1"))
+data$sop___4.factor = factor(data$sop___4,levels=c("0","1"))
+data$sop___5.factor = factor(data$sop___5,levels=c("0","1"))
+data$sop___6.factor = factor(data$sop___6,levels=c("0","1"))
+data$res_brnich20.factor = factor(data$res_brnich20,levels=c("0","1","2"))
+data$res_walker23.factor = factor(data$res_walker23,levels=c("0","1","2"))
+data$res_mavedb.factor = factor(data$res_mavedb,levels=c("0","1","2"))
+data$res_ave.factor = factor(data$res_ave,levels=c("0","1","2"))
+data$res_sviws.factor = factor(data$res_sviws,levels=c("0","1","2"))
+data$res_vcep.factor = factor(data$res_vcep,levels=c("0","1","2"))
+data$res_vepmave.factor = factor(data$res_vepmave,levels=c("0","1","2"))
+data$barrier___1.factor = factor(data$barrier___1,levels=c("0","1"))
+data$barrier___2.factor = factor(data$barrier___2,levels=c("0","1"))
+data$barrier___3.factor = factor(data$barrier___3,levels=c("0","1"))
+data$barrier___4.factor = factor(data$barrier___4,levels=c("0","1"))
+data$barrier___5.factor = factor(data$barrier___5,levels=c("0","1"))
+data$barrier___6.factor = factor(data$barrier___6,levels=c("0","1"))
+data$barrier___7.factor = factor(data$barrier___7,levels=c("0","1"))
+data$improve___1.factor = factor(data$improve___1,levels=c("0","1"))
+data$improve___2.factor = factor(data$improve___2,levels=c("0","1"))
+data$improve___3.factor = factor(data$improve___3,levels=c("0","1"))
+data$improve___4.factor = factor(data$improve___4,levels=c("0","1"))
+data$improve___5.factor = factor(data$improve___5,levels=c("0","1"))
+data$improve___6.factor = factor(data$improve___6,levels=c("0","1"))
+data$mavedbuse.factor = factor(data$mavedbuse,levels=c("1","2","3","4"))
+data$learn_q.factor = factor(data$learn_q,levels=c("1","0"))
+data$learn_how___1.factor = factor(data$learn_how___1,levels=c("0","1"))
+data$learn_how___2.factor = factor(data$learn_how___2,levels=c("0","1"))
+data$learn_how___3.factor = factor(data$learn_how___3,levels=c("0","1"))
+data$learn_how___4.factor = factor(data$learn_how___4,levels=c("0","1"))
+data$learn_how___5.factor = factor(data$learn_how___5,levels=c("0","1"))
+data$learn_how___6.factor = factor(data$learn_how___6,levels=c("0","1"))
+data$learn_how___7.factor = factor(data$learn_how___7,levels=c("0","1"))
+data$learn_how___8.factor = factor(data$learn_how___8,levels=c("0","1"))
+data$dem_pos.factor = factor(data$dem_pos,levels=c("1","2","3","4","5","6"))
+
+levels(data$activity_vc.factor)=c("do not perform","perform now","will perform in the future")
+levels(data$activity_r.factor)=c("do not perform","perform now","will perform in the future")
+levels(data$activity_gr.factor)=c("do not perform","perform now","will perform in the future")
+levels(data$activity_dr.factor)=c("do not perform","perform now","will perform in the future")
+levels(data$activity_mdt.factor)=c("do not perform","perform now","will perform in the future")
+levels(data$activity_ep.factor)=c("do not perform","perform now","will perform in the future")
+levels(data$fe_activity_pd.factor)=c("do not perform","perform now","will perform in the future")
+levels(data$fe_activity_cpd.factor)=c("do not perform","perform now","will perform in the future")
+levels(data$fe_activity_ca.factor)=c("do not perform","perform now","will perform in the future")
+levels(data$fe_activity_rfed.factor)=c("do not perform","perform now","will perform in the future")
+levels(data$fe_activity_rfer.factor)=c("do not perform","perform now","will perform in the future")
+levels(data$fetype_ba.factor)=c("not at all comfortable","not comfortable","somewhere in the middle","comfortable","very comfortable")
+levels(data$fetype_ta.factor)=c("not at all comfortable","not comfortable","somewhere in the middle","comfortable","very comfortable")
+levels(data$fetype_cm.factor)=c("not at all comfortable","not comfortable","somewhere in the middle","comfortable","very comfortable")
+levels(data$fetype_am.factor)=c("not at all comfortable","not comfortable","somewhere in the middle","comfortable","very comfortable")
+levels(data$fetype_mave.factor)=c("not at all comfortable","not comfortable","somewhere in the middle","comfortable","very comfortable")
+levels(data$sop___1.factor)=c("Unchecked","Checked")
+levels(data$sop___2.factor)=c("Unchecked","Checked")
+levels(data$sop___3.factor)=c("Unchecked","Checked")
+levels(data$sop___4.factor)=c("Unchecked","Checked")
+levels(data$sop___5.factor)=c("Unchecked","Checked")
+levels(data$sop___6.factor)=c("Unchecked","Checked")
+levels(data$res_brnich20.factor)=c("do not know of this","aware of","use")
+levels(data$res_walker23.factor)=c("do not know of this","aware of","use")
+levels(data$res_mavedb.factor)=c("do not know of this","aware of","use")
+levels(data$res_ave.factor)=c("do not know of this","aware of","use")
+levels(data$res_sviws.factor)=c("do not know of this","aware of","use")
+levels(data$res_vcep.factor)=c("do not know of this","aware of","use")
+levels(data$res_vepmave.factor)=c("do not know of this","aware of","use")
+levels(data$barrier___1.factor)=c("Unchecked","Checked")
+levels(data$barrier___2.factor)=c("Unchecked","Checked")
+levels(data$barrier___3.factor)=c("Unchecked","Checked")
+levels(data$barrier___4.factor)=c("Unchecked","Checked")
+levels(data$barrier___5.factor)=c("Unchecked","Checked")
+levels(data$barrier___6.factor)=c("Unchecked","Checked")
+levels(data$barrier___7.factor)=c("Unchecked","Checked")
+levels(data$improve___1.factor)=c("Unchecked","Checked")
+levels(data$improve___2.factor)=c("Unchecked","Checked")
+levels(data$improve___3.factor)=c("Unchecked","Checked")
+levels(data$improve___4.factor)=c("Unchecked","Checked")
+levels(data$improve___5.factor)=c("Unchecked","Checked")
+levels(data$improve___6.factor)=c("Unchecked","Checked")
+levels(data$mavedbuse.factor)=c("I do not know what MaveDB is","I know what MaveDB is but have not used it","I have accessed data via MaveDB","I incorporate data from MaveDB into variant classification")
+levels(data$learn_q.factor)=c("Yes","No")
+levels(data$learn_how___1.factor)=c("Unchecked","Checked")
+levels(data$learn_how___2.factor)=c("Unchecked","Checked")
+levels(data$learn_how___3.factor)=c("Unchecked","Checked")
+levels(data$learn_how___4.factor)=c("Unchecked","Checked")
+levels(data$learn_how___5.factor)=c("Unchecked","Checked")
+levels(data$learn_how___6.factor)=c("Unchecked","Checked")
+levels(data$learn_how___7.factor)=c("Unchecked","Checked")
+levels(data$learn_how___8.factor)=c("Unchecked","Checked")
+levels(data$dem_pos.factor)=c("Laboratory scientist","Genetic pathologist","Clinical geneticist","Genetic counsellor","Research scientist","Other - please describe")
+
+##------------looking into the participant demographics-------------------------------------
+
+##position performed
+#label(data$dem_pos.factor)="What is your primary professional position?"
+#AND label(data$dem_pos_other)="Other - Please describe your primary professional position"
+summary(data$dem_pos.factor)
+data %>% count(dem_pos.factor)
+summary(as.factor(data$dem_pos_other))
+
+#graph of primary position as indicated
+ggplot(data, aes(dem_pos.factor, fill = dem_pos.factor))+
+  geom_histogram(stat = "count") +
+  labs(x = "", y = "no. participants", title = "Primary professional position")
+
+#list of 'other' primary positions
+data$dem_pos_other[data$dem_pos_other==""] <- NA
+data$dem_pos_other = as.factor(data$dem_pos_other)
+other_pos = na.omit(data$dem_pos_other)
+
+#group positions into (clinical) scientist, clinician and researcher.
+clin_pos = c("Clinical geneticist","Genetic counsellor", "Genetic pathologist","Genetic Pathology trainee")
+sci_pos =  c("Laboratory scientist", "Variant curator", "Graduate researcher, working as a variant curator","Research variant curator")
+res_pos = c("Research scientist", "researcher and VCEP lead","Clinician Researcher", "Research assistant, research variant curation and functional studies")
+
+#convert dem column
+data$dem_group = as.factor(case_when(data$dem_pos.factor == "Clinical geneticist" | 
+                           data$dem_pos.factor == "Genetic counsellor" |
+                           data$dem_pos.factor == "Genetic pathologist" |
+                           data$dem_pos_other == "Genetic Pathology trainee" ~ "clinician",
+                           data$dem_pos.factor == "Research scientist" | 
+                             data$dem_pos_other == "researcher and VCEP lead" |
+                             data$dem_pos_other == "Clinician Researcher" |
+                             data$dem_pos_other == "Research assistant, research variant curation and functional studies" ~ "researcher",
+                           data$dem_pos.factor == "Laboratory scientist" | 
+                             data$dem_pos_other == "Variant curator " |
+                             data$dem_pos_other == "Graduate researcher, working as a variant curator " |
+                             data$dem_pos_other == "Research variant curator" ~ "scientist",
+                           .default = "other"))
+
+summary(data$dem_group)
+summary(as.factor(data$dem_pos.factor))
+
+##roles performed
+#label(data$activity_vc)="Variant classification for determining variant pathogenicity in a diagnostic setting"
+summary(data$activity_vc.factor)
+#label(data$activity_r)="Variant classification for research purposes"
+summary(data$activity_r.factor)
+
+table(data$activity_vc.factor, data$activity_r.factor)
+
+#look at the person that indicated does not curate either res or clinical
+data %>% filter(activity_vc.factor == "do not perform") %>% 
+  filter(activity_r.factor == "do not perform") %>% summary()
+#NOTING THAT IS A RESEARCHER THAT USES BRNICH, performed pd "Evaluate functional data from a publicly available datasource or publication for research purposes"
+
+#adjustment of dem_group "other", convert 'other' to scientist , they perform curation, therefore must be curator = scientist
+summary(data$activity_vc.factor)
+summary(data$dem_group)
+data$dem_group_adj = as.factor(ifelse(data$dem_group == "other","scientist",paste(data$dem_group)))
+summary(data$dem_group_adj)
+
+#graph of adjusted diagnostic variant curation activities performed correlated with dem_group
+ggplot(data, aes(dem_group_adj, fill = activity_vc.factor))+
+  geom_histogram(stat = "count")+
+  labs(x = "", y = "no. participants", title = "Variant classification in diagnostic setting")
+
+#label(data$activity_r)="Variant classification for research purposes"
+ggplot(data, aes(activity_r.factor, fill = dem_group))+
+  geom_histogram(stat = "count")+
+  labs(x = "", y = "no. participants", title = "Variant classification in research setting")
+
+#adjusted demographics
+ggplot(data, aes(activity_r.factor, fill = dem_group_adj))+
+  geom_histogram(stat = "count")+
+  labs(x = "", y = "no. participants", title = "Variant classification in research setting")
+
+ggplot(data, aes(dem_group_adj, fill = activity_r.factor))+
+  geom_histogram(stat = "count")+
+  labs(x = "", y = "no. participants", title = "Variant classification in research setting")
+
+
+##################FIRST SECTION#######who is doing what#################################
+##who is doing what
+
+#separating into does and doesnt perform variant classification in diagnostic setting
+data$diag_curation_exp = ifelse(data$activity_vc.factor == "perform now", "yes", "no")
+data$diag_curation_exp = as.factor(data$diag_curation_exp)
+summary(data$diag_curation_exp)
+
+ggplot(data, aes(diag_curation_exp))+
+  geom_histogram(stat = "count")+
+  labs(x = "", y = "no. participants", title = "Participants performing diagnostic variant curation")
+
+#graph of research curation activities performed correlated with dem_group
+ggplot(data, aes(dem_group, fill = diag_curation_exp ))+
+  geom_histogram(stat = "count")+
+  labs(x = "", y = "no. participants", title = "roles performing diagnostic variant curation")
+
+#graph of dem groups that perform variant classification in diagnostic setting
+ggplot(data, aes(diag_curation_exp, fill = dem_group))+
+  geom_histogram(stat = "count")+
+  labs(x = "", y = "no. participants", title = "roles performing diagnostic variant curation")
+
+ggplot(data, aes(fe_activity_pd.factor, fill =diag_curation_exp))+
+  geom_bar(stat = "count")+
+  labs(x = "", y = "no. participants", title = "")
+
+#separating into does and doesn't perform variant classification in research setting
+data$res_curation_exp = ifelse(data$activity_r.factor == "perform now", "yes", "no")
+data$res_curation_exp = as.factor(data$res_curation_exp)
+summary(data$res_curation_exp)
+
+###comparing who is doing diagnostic vs research curation
+table(data$diag_curation_exp, data$res_curation_exp)
+
+data %>% filter(diag_curation_exp == "no") %>% 
+  filter(res_curation_exp == "no") %>% summary()
+
+####experience level summary statistics ####
+summary(data$dem_yrs)
+mean(na.omit(data$dem_yrs))
+
+# Calculate the mean of the years or 'demographic years of experience'
+mean(na.omit(data$dem_yrs))
+
+# Compute the size
+length(na.omit(data$dem_yrs))
+
+# Find the standard deviation
+sd(na.omit(data$dem_yrs))
+
+# Find the standard error
+standard_error <- sd(na.omit(data$dem_yrs)) / sqrt(length(na.omit(data$dem_yrs)))
+#calculating the margin of error
+#alpha = 0.05
+#degrees_of_freedom = n - 1
+t_score = qt(p=0.05/2, df= (length(na.omit(data$dem_yrs))),lower.tail=F)
+margin_error <- t_score * standard_error
+
+# Calculating lower bound and upper bound
+lower_bound <- (mean(na.omit(data$dem_yrs))) - margin_error
+upper_bound <- (mean(na.omit(data$dem_yrs))) + margin_error
+
+# Print the confidence interval
+print(c(lower_bound,upper_bound))
+
+#creating the data frame of experience levels
+exp_summary = c(col = "years_experience",
+                mean = mean(na.omit(data$dem_yrs)), 
+                standard_error = sd(na.omit(data$dem_yrs)) / sqrt(length(na.omit(data$dem_yrs))),
+                n = length(na.omit(data$dem_yrs)),
+                st_dev = sd(na.omit(data$dem_yrs)),
+                t_score = qt(p=0.05/2, df= (length(na.omit(data$dem_yrs))),lower.tail=F),
+                margin_error = t_score * standard_error,
+                lower_bound =(mean(na.omit(data$dem_yrs))) - margin_error,
+                upper_bound =(mean(na.omit(data$dem_yrs))) + margin_error)
+exp_summary_df = type.convert(as.data.frame(rbind(exp_summary), row.names = TRUE), as.is = TRUE)
+
+########variant curators evaluation of FE #############
+#selected columns/rows
+#label(data$fe_activity_pd)="Evaluate functional data from a publicly available datasource or publication for research purposes"
+#label(data$fe_activity_cpd)="Curate functional evidence from a publicly available datasource or publication for the purpose of clinical variant classification"
+#label(data$fe_activity_ca)="Use functional evidence as a catalyst to reassess a variant classification in the clinical setting"
+#label(data$fe_activity_rfed)="Request functional evidence from a diagnostic accredited laboratory to inform clinical interpretation of a variant"
+#label(data$fe_activity_rfer)="Request functional evidence from a research laboratory to inform clinical interpretation of a variant"
+#label(data$activitiesfe_other_list)="Please list any additional functional evidence related activities that you perform now or may perform in the future."
+
+fe_qs = c("fe_activity_pd.factor","fe_activity_cpd.factor","fe_activity_ca.factor","fe_activity_rfed.factor", "fe_activity_rfer.factor")
+
+colnames(data)
+
+#how many participants are interacting with fe, and in which ways
+#summary
+summary(data[,79:83])
+data %>% select(all_of(fe_qs)) %>% summary()
+
+print(data$activitiesfe_other_list)
+
+#check how many wouldn't curate as outside of scope
+summary(data$barrier___3.factor)
+
+#interogating who is performing multiple of the fe interactions
+data %>% filter(fe_activity_cpd.factor == "perform now") %>% select(all_of(fe_qs)) %>% summary()
+table(data$fe_activity_cpd.factor, data$fe_activity_pd.factor)
+
+#look at the ones that don't perform fe evlaution, clinical or research
+data %>% filter(fe_activity_cpd.factor == "do not perform") %>% 
+  filter(fe_activity_pd.factor == "do not perform") %>% summary()
+
+#look at the clinician that doesn't perform fe evlaution, 
+data %>% filter(fe_activity_cpd.factor == "do not perform") %>% 
+  filter(fe_activity_pd.factor == "do not perform") %>% 
+  filter(dem_group_adj == "clinician") %>% 
+  summary()
+
+#plot
+ggplot(data, aes(fe_activity_pd.factor))+
+  geom_bar(stat = "count")+
+  labs(x = "", y = "no. participants", title = "Evaluate functional data fe_activity_pd.factor")
+
+####graphing
+#how many variant curators evaluation FE for research purposes
+#label(data$fe_activity_pd)="Evaluate functional data from a publicly available datasource or publication for research purposes"
+
+#plot
+ggplot(data, aes(diag_curation_exp, fill =fe_activity_pd.factor))+
+  geom_bar(stat = "count")+
+  labs(x = "", y = "no. participants", title = "Evaluate functional data from public source")
+
+#do those with curation experience evaluate data from public source more often?
+ggplot(data, aes(diag_curation_exp, fill = fe_activity_pd.factor))+
+  geom_bar(position = "dodge")+
+  labs(x = "diagnostic curation experience", y = "no. participants", title = "Functional data evaluation for research")
+
+##how many variant curators evaluate FE for clinical purposes
+#label(data$fe_activity_cpd)="Curate functional evidence from a publicly available datasource or publication for the purpose of clinical variant classification"
+#do those with curation experience evaluate data from public source more often?
+ggplot(data, aes(diag_curation_exp, fill = fe_activity_cpd.factor))+
+  geom_bar(position = "dodge")+
+  labs(x = "diagnostic curation experience", y = "no. participants", title = "Functional data evaluation for clinical")
+
+#figuring out how many interact with FE full stop (under any of the options)
+fe_qs = c("fe_activity_pd.factor","fe_activity_cpd.factor","fe_activity_ca.factor","fe_activity_rfed.factor", "fe_activity_rfer.factor")
+
+#create a column
+data$fe_interaction_prioritylist = as.factor(case_when(
+  data$fe_activity_cpd.factor == "perform now" ~ "fe_clin_use",
+  data$fe_activity_pd.factor == "perform now" ~ "fe_res_use",
+  data$fe_activity_ca.factor == "perform now" ~ "fe_catalyst",
+  data$fe_activity_rfed.factor == "perform now" ~ "fe_diag_req",
+  data$fe_activity_rfer.factor == "perform now" ~ "fe_res_req"
+))
+summary(data$fe_interaction_prioritylist)
+#look at the ones that don't interact with fe at all
+data %>% filter(is.na(fe_interaction_prioritylist))
+
+#creating the data frame of fe interactions
+fe_use = as.data.frame(rbind(fe_clin_use = table(data$fe_activity_cpd.factor),
+                             fe_res_use = table(data$fe_activity_pd.factor),
+                             fe_catalyst = table(data$fe_activity_ca.factor),
+                             fe_diag_req = table(data$fe_activity_rfed.factor),
+                             fe_res_req = table(data$fe_activity_rfer.factor)))
+
+fe_use$Method = row.names(fe_use)
+#create a total column to check all have 'all participants'
+#fe_use$Total = fe_use$do not perform + fe_use$perform now + fe_use$perform in the future
+fe_use
+
+#graph a summary accross fe use types
+ggplot(fe_use, aes(Method, `perform now`))+
+  geom_col()+
+  labs(x = "", y = "no. participants", title = "FE uses")+
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+#make longer table (currently wider )
+fe_use_long = fe_use %>%
+  pivot_longer(cols = c("perform now","will perform in the future","do not perform"),names_to = "current_use", values_to = "count")
+
+fe_use_long$current_use = factor(fe_use_long$current_use, levels=c("do not perform","will perform in the future","perform now"))
+fe_use_long$Method = factor(fe_use_long$Method, levels=c("fe_clin_use","fe_res_use","fe_catalyst", "fe_diag_req", "fe_res_req"))
+
+
+ggplot(fe_use_long, aes(x=reorder(Method, current_use), y=count, fill= current_use)) + 
+  geom_bar(position="stack", stat="identity")+
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+
+#looking just at those that curate clinically
+data_vc = data[data$diag_curation_exp == "yes", ]
+summary(data_vc$sop)
+
+##what are you aware of for FE approach, recommendations and resources
+colnames(data)
+restype = c(colnames(data[95:101]))
+res_type_summ = as.data.frame(summary(data[,c(restype)]))
+res_type_summ = summary(data[,c(restype)])
+
+####what do you know about#################################
+#ie res_types
+#data$resource_q - free text questions about where people source FE
+#"res_brnich20.factor"                           
+#[95] "res_walker23.factor"                            "res_mavedb.factor"                             
+#[97] "res_ave.factor"                                 "res_sviws.factor"                              
+#[99] "res_vcep.factor"                                "res_vepmave.factor"
+summary(data$res_brnich20.factor)
+summary(data$res_walker23.factor)
+summary(data$res_mavedb.factor)
+summary(data$res_ave.factor)
+summary(data$res_sviws.factor)
+summary(data$res_vcep.factor)
+summary(data$res_vepmave.factor)
+
+#graphing who is aware of which resources
+b = ggplot(data, aes(res_brnich20.factor, fill = res_brnich20.factor))+
+  geom_bar()+
+  theme(legend.title = element_blank(), legend.position = "none")+
+  labs(x = "", y = "no. participants", title = "Brnich et al")
+b
+
+w = ggplot(data, aes(res_walker23.factor, fill = res_walker23.factor))+
+  geom_bar()+
+  theme(legend.title = element_blank(), legend.position = "none")+
+  labs(x = "", y = "no. participants", title = "Walker et al")
+w
+
+s = ggplot(data, aes(res_sviws.factor, fill = res_sviws.factor))+
+  geom_bar()+
+  theme(legend.title = element_blank(), legend.position = "none")+
+  labs(x = "", y = "no. participants", title = "SVI WS")
+s
+
+v = ggplot(data, aes(res_vcep.factor, fill = res_vcep.factor))+
+  geom_bar()+
+  theme(legend.title = element_blank(), legend.position = "none")+
+  labs(x = "", y = "no. participants", title = "VCEP")
+v
+
+##################SECOND SECTION#######confidence###############################
+###looking and comfort, confidence 
+colnames(data)
+#select the confidence columns
+# [83] "fetype_ba.factor"                               "fetype_ta.factor"                              
+#[85] "fetype_cm.factor"                               "fetype_am.factor"                              
+#[87] "fetype_mave.factor"
+
+summary(data$fetype_ba.factor)
+
+#remove the confidence row that was all NA (participant 19)
+summary(na.omit(data$fetype_ba.factor))
+#ROW15/recordID19 as it is all NA's in the assay confidence section. also NA in another row, 
+#will need to evaluate/graph with NA's omited and keep record of the #values used for graph
+#identify columns
+colnames(data)
+summary(data[,c("fetype_ba.factor",
+                "fetype_ta.factor",
+                "fetype_cm.factor",
+                "fetype_am.factor",
+                "fetype_mave.factor")])
+
+
+#looking at the average confidence per assay type
+data[,c("fetype_ba.factor",
+        "fetype_ta.factor",
+        "fetype_cm.factor",
+        "fetype_am.factor",
+        "fetype_mave.factor")] %>% summary()
+
+#looking at the distribution of confidence for each assay type
+data %>% 
+  drop_na(fetype_ba.factor) %>%
+  ggplot(., aes((fetype_ba.factor), fill = fetype_ba.factor))+
+  geom_bar()+
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))+
+  labs(x = "", y = "no. participants", title = "Comfort level with biochemical assay interpretation")
+sum(!is.na(data$fetype_ba.factor))
+
+assay_conf_list = c("not at all comfortable","not comfortable","somewhere in the middle","comfortable","very comfortable")
+assay_types_list = c("Biochemical","Transcript","Cell model","Animal model","MAVE")
+
+#creating a summary data table
+assay_type_conf = as.data.frame(rbind(ba = summary(na.omit(data$fetype_ba.factor)),
+                                   ta = summary(na.omit(data$fetype_ta.factor)),
+                                   cm = summary(na.omit(data$fetype_cm.factor)),
+                                   am = summary(na.omit(data$fetype_am.factor)),
+                                   mave = summary(na.omit(data$fetype_mave.factor))))
+
+#make assay type as a column
+assay_type_conf$assay_type = row.names(assay_type_conf)
+
+#make a total column
+assay_type_conf$total_n_asstype = rowSums(
+  assay_type_conf[ , c(assay_conf_list)], na.rm = T)
+
+#make longer table (currently wider )
+assay_type_conf_long = assay_type_conf %>% pivot_longer(all_of(assay_conf_list), names_to = "comfort_level", values_to = "count")
+
+ggplot(assay_type_conf_long, aes(x=assay_type, y=count, fill=comfort_level)) + 
+  geom_bar(position="dodge", stat="identity")
+
+###gaph of confidence levels across all assays - also fig 1
+assay_type_conf_long %>%
+  mutate(assay_type = factor(assay_type, levels = unique(assay_type))) %>%
+  ggplot(aes(x=assay_type, y= count, fill=factor(comfort_level, levels = c(assay_conf_list)))) + 
+  geom_bar(position = position_dodge2(reverse = FALSE), stat="identity")+
+  theme(legend.title = element_blank())+
+  labs(x = "", y = "no. participants", title = "Comfort level with different functional evidence types")+
+  scale_x_discrete(labels=c(assay_types_list))
+
+#summary statistics of confidence - grouped answers
+assay_type_conf$comf_any = assay_type_conf$comfortable + assay_type_conf$`very comfortable`
+assay_type_conf$discomf_any = assay_type_conf$`somewhere in the middle` + assay_type_conf$`not comfortable` + assay_type_conf$`not at all comfortable`
+assay_type_conf$comf_any_percent = (assay_type_conf$comf_any/assay_type_conf$total_n_asstype)*100
+
+#write.table(assay_type_conf, file = paste(gsub(":", "-", Sys.Date()),"_FEassay_confidence.txt",sep=""), quote = FALSE, sep = "\t", col.names = TRUE,row.names = FALSE)
+
+##################THIRD SECTION########improve and barriers##################################
+##----------looking at how to improve FE use#####
+#What would improve your interaction with and use of functional evidence (existing or not)?
+#label(data$improve___1)="What would improve your interaction with and use of functional evidence (existing or not)? (choice=Education/training in functional evidence use)"
+#label(data$improve___2)="What would improve your interaction with and use of functional evidence (existing or not)? (choice=Additional guidelines on functional evidence use)"
+#label(data$improve___3)="What would improve your interaction with and use of functional evidence (existing or not)? (choice=Improved methods to source functional evidence)"
+#label(data$improve___4)="What would improve your interaction with and use of functional evidence (existing or not)? (choice=Increased information on published functional data)"
+#label(data$improve___5)="What would improve your interaction with and use of functional evidence (existing or not)? (choice=Improved access to commission creation of functional data)"
+#label(data$improve___6)="What would improve your interaction with and use of functional evidence (existing or not)? (choice=Improved curation resourcing (more time/funding))"
+
+#creating the data frame of preferred methods
+improvedata2 = as.data.frame(rbind(Education = table(data$improve___1.factor),
+                                   Guidelines = table(data$improve___2.factor),
+                                   Methods = table(data$improve___3.factor),
+                                   Information = table(data$improve___4.factor),
+                                   Access = table(data$improve___5.factor),
+                                   Resourcing = table(data$improve___6.factor)))
+improvedata2$Improvement = row.names(improvedata2)
+improvedata2$Total = improvedata2$Checked + improvedata2$Unchecked
+
+ggplot(improvedata2, aes(Improvement,Checked))+
+  geom_col()
+
+#adding in a percentage of participants that indicated this preferred method of improvement
+improvedata2$agree_percent = (improvedata2$Checked/improvedata2$Total)*100
+
+#barriers_long = barriers %>% pivot_longer(barrier_type, names_to = "barrier_type_count", values_to = "n")
+improvedata2 %>% ggplot(., aes(x= reorder(Improvement,Checked, decreasing = FALSE), y=Checked, fill=Improvement)) + 
+  geom_col()+
+  coord_flip()+
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1), legend.position = "none")+
+  labs(x = "", y = "no. participants", title = "What would improve your interaction?")
+
+
+##would you want further training
+#learn_q
+summary(data$learn_q.factor)
+learn = summary(data$learn_q.factor)
+
+#what are the barriers to FE use
+#Which of the following might prevent your use of functional evidence in variant classification?
+colnames(data)
+#label(data$barrier___1)=(choice=Lack of time)"
+#label(data$barrier___2)="(choice=Insufficient training)"
+#label(data$barrier___3)= (choice=Outside the scope of my role)"
+#label(data$barrier___4)=(choice=Cannot find functional data)"
+#label(data$barrier___5)=(choice=Lack of familiarity with specific assay)"
+#label(data$barrier___6)="(choice=The assay is too general (not gene-disease specific enough))"
+#label(data$barrier___7)="(choice=Other)"
+#label(data$barrier_other)="If you selected other, please list"
+#101:107"barrier___1.factor"                                   
+#[39] "barrier___2"                                    "barrier___3"                                   
+#[41] "barrier___4"                                    "barrier___5"                                   
+#[43] "barrier___6"                                    "barrier___7"
+summary(data[,101:107])
+
+barrier_full = c("Lack of time","Insufficient training","Outside the scope of my role","Cannot find functional data",
+"Lack of familiarity with specific assay","The assay is too general","Other")
+
+#creating a summary data table
+barriers = as.data.frame(rbind(bar1 = summary(na.omit(data$barrier___1.factor)),
+                                      bar2 = summary(na.omit(data$barrier___2.factor)),
+                                      bar3 = summary(na.omit(data$barrier___3.factor)),
+                                      bar4 = summary(na.omit(data$barrier___4.factor)),
+                                      bar5 = summary(na.omit(data$barrier___5.factor)),
+                                      bar6 = summary(na.omit(data$barrier___6.factor)),
+                                      bar7 = summary(na.omit(data$barrier___7.factor))))
+
+#make assay type as a column
+barriers$barrier_type = row.names(barriers)
+barriers$barrier_full = c(barrier_full)
+
+#make a total column
+barriers$total_n = barriers$Checked + barriers$Unchecked
+
+#adding in a percentage of participants that indicated this as a barrier
+barriers$barrier_percent = (barriers$Checked/barriers$total_n)*100
+
+#make longer table (currently wider )
+#barriers_long = barriers %>% pivot_longer(barrier_type, names_to = "barrier_type_count", values_to = "n")
+ggplot(barriers, aes(x= reorder(barrier_full,Checked, decreasing = FALSE), y=Checked, fill=barrier_full)) + 
+  geom_col()+
+  coord_flip()+
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1), legend.position = "none")+
+  labs(x = "", y = "no. participants", title = "Which might prevent your use of functional evidence")
+       
+#what type of training
+#Which of the following training and/or additional resources would you use to increase/improve your use/understanding of applying functional evidence? (please select all that apply)
+#Process guidelines"
+#Expert guidance documents (for e.g. from Variant Curation Expert Panels"
+#Peer reviewed recommendations)"
+#Tools to assist in functional assay evaluation"
+#choice=Professional development opportunities"
+#Online learning resources"
+#I would not access"
+#Other?"
+colnames(data)
+summary(data[,116:123])
+
+learning_resources = c("Process guidelines", "Expert guidance documents",
+                       "Peer reviewed recommendations","Tools to assist in  assay evaluation",
+                       "Professional development opportunities","Online learning resources","I would not access","Other")
+
+#creating a summary data table
+learn_how = as.data.frame(rbind(learn_h1 = summary(na.omit(data$learn_how___1.factor)),
+                                learn_h2 = summary(na.omit(data$learn_how___2.factor)),
+                                learn_h3 = summary(na.omit(data$learn_how___3.factor)),
+                                learn_h4 = summary(na.omit(data$learn_how___4.factor)),
+                                learn_h5 = summary(na.omit(data$learn_how___5.factor)),
+                                learn_h6 = summary(na.omit(data$learn_how___6.factor)),
+                                learn_h7 = summary(na.omit(data$learn_how___7.factor)),
+                                learn_h8 = summary(na.omit(data$learn_how___8.factor))))
+
+#make resource as a column
+learn_how$learn_label = row.names(learn_how)
+learn_how$learning_resources = c(learning_resources)
+
+#make a total column
+learn_how$total_n = learn_how$Checked + learn_how$Unchecked
+
+#adding in a percentage of participants that indicated this preferred method of improvement
+learn_how$learn_percent = (learn_how$Checked/learn_how$total_n)*100
+learn_how
+
+#make longer table (currently wider )
+learn_how %>% 
+  ggplot(aes(x=reorder(learning_resources,Checked, decreasing = FALSE), y=Checked, fill=learning_resources)) + 
+  geom_col()+
+  coord_flip()+
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1), legend.position = "none")+
+  labs(x = "", y = "no. participants", title = "Which resources would you use")
+
+##################FIGURES######################################################################
+###FIGURE 1 --------------------------------------
+theme_set(theme_gray(base_size = 14))
+
+plot_conf = assay_type_conf_long %>% mutate(assay_type = factor(assay_type, levels = unique(assay_type))) %>%
+  ggplot(aes(x=assay_type, y= count, fill=factor(comfort_level, levels = c(assay_conf_list)))) + 
+  geom_bar(position = position_dodge2(reverse = FALSE), stat="identity")+
+  theme(legend.title = element_blank())+
+  labs(x = "", y = "no. participants", title = "")+
+  scale_x_discrete(labels=c(assay_types_list))
+
+#graphing who is aware of which resources
+plot_b = ggplot(data, aes(res_brnich20.factor, fill = res_brnich20.factor))+
+  geom_bar()+
+  theme(legend.title = element_blank(), legend.position = "none")+
+  labs(x = "", y = "no. participants", title = "Brnich 2020 functional recommendations")
+
+#walker recommendations WITH NA result, 
+#ggplot(data, aes(res_walker23.factor, fill = res_walker23.factor))+
+#  geom_bar()+
+#  theme(legend.title = element_blank(), legend.position = "none")+
+#  labs(x = "", y = "no. participants", title = "Walker 2023 splicing recommendations")
+
+plot_w = data %>% filter(res_walker23.factor != "NA") %>% ggplot(aes(res_walker23.factor, fill = res_walker23.factor))+
+  geom_bar()+
+  theme(legend.title = element_blank(), legend.position = "none")+
+  labs(x = "", y = "no. participants", title = "Walker 2023 splicing recommendations")
+
+plot_m = ggplot(data, aes(res_mavedb.factor, fill = res_mavedb.factor))+
+  geom_bar()+
+  theme(legend.title = element_blank(), legend.position = "none")+
+  labs(x = "", y = "no. participants", title = "")
+
+plot_s = ggplot(data, aes(res_sviws.factor, fill = res_sviws.factor))+
+  geom_bar()+
+  theme(legend.title = element_blank(), legend.position = "none")+
+  labs(x = "", y = "no. participants", title = "SVI functional assay worksheet")
+
+plot_v = ggplot(data, aes(res_vcep.factor, fill = res_vcep.factor))+
+  geom_bar()+
+  theme(legend.title = element_blank(), legend.position = "none")+
+  labs(x = "", y = "no. participants", title = "VCEP specific guidance on functional evidence")
+
+# figure
+#plot_grid(plot_conf, plot_grid(b,w,s,v, align = "h", axis = "b", rel_widths = c(1,1),
+ #                               labels = c("B","C","D","E"),
+  #                              ncol = 2,nrow = 2),align = "h", axis = "b", rel_widths = c(1, 1),rel_heights = c(1,1.5), labels = c("A", ""), ncol = 1, nrow = 2)
+
+# figure
+plot_grid(plot_conf, plot_grid(plot_b,NA,plot_w,NA,plot_s,NA, plot_v,NA, align = "h", axis = "b", rel_widths = c(1,0.5,1,0.5),
+                               labels = c("B","","C","","D","","E",""),
+                               ncol = 4,nrow = 2),axis = "b", rel_widths = c(1, 1),rel_heights = c(1,1), labels = c("A", ""), ncol = 1, nrow = 2)
+
+ggsave(path = "D:/project_functionalevidence/manuscript_needs/figures", 
+       filename = paste(gsub(":", "-", Sys.Date()),"_fig1.png",sep=""), 
+       width = 12, height = 14, device='png', dpi=600)
+
+
+#--Figure 2 -------------------------------------------------
+
+###what people are looking for to support improvement
+
+#####graphing what would improve interaction with funtional evidence. 
+ggplot(improvedata2, aes(Improvement,Checked))+
+  geom_col()
+
+#improvement
+plot_imp = improvedata2 %>% ggplot(., aes(x= reorder(Improvement,Checked, decreasing = FALSE), y=Checked, fill=Improvement)) + 
+  geom_col()+
+  coord_flip()+
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1),axis.text.y = element_text(size = 14), legend.position = "none")+
+  labs(x = "", y = "no. participants", title = "What would improve your interaction?")
+
+#barriers
+plot_bar = ggplot(barriers, aes(x= reorder(barrier_full,Checked, decreasing = FALSE), y=Checked, fill=barrier_full)) + 
+  geom_col()+
+  coord_flip()+
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1), axis.text.y = element_text(size = 14),legend.position = "none")+
+  labs(x = "", y = "no. participants", title = "Which might prevent your use of functional evidence?")
+
+#preferred learning resources
+plot_lnh = learn_how %>% 
+  ggplot(aes(x=reorder(learning_resources,Checked, decreasing = FALSE), y=Checked, fill=learning_resources)) + 
+  geom_col()+
+  coord_flip()+
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1), axis.text.y = element_text(size = 14),legend.position = "none")+
+  labs(x = "", y = "no. participants", title = "Which resources would you use?")
+
+plot_grid(plot_bar,plot_imp,plot_lnh,align = "v", axis = "b", labels = c("A","B","C"),ncol = 1, nrow = 3)
+
+ggsave(path = "D:/project_functionalevidence/manuscript_needs/figures", 
+       filename = paste(gsub(":", "-", Sys.Date()),"_fig2.png",sep=""), 
+       width = 8, height = 12, device='png', dpi=600)
