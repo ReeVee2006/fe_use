@@ -6,22 +6,20 @@
 #Clear existing data and graphics
 rm(list=ls())
 graphics.off()
-#Load Hmisc library
-library(Hmisc)
 library(tidyverse)
-library(GenomicRanges)
 library(cowplot)
 library(RColorBrewer)
-library(wesanderson)
 
 #set up files--------------------------------------------
 #setwd 
+setwd("D:/project_functionalevidence/manuscript_needs/github_MAVE_needs")
 date = strftime(Sys.Date(),"%y%m%d")
 
 #Read Data
 #needs survey data  exported from redcap 02.04.2024
 #removed test/incomplete entries (row #1,2,3 and 5)
 #removed identifiers
+#####DATA AVAILABLE ON REQUEST due to consent
 data=read.csv('TheMAVEEducationProj_DATA_2024-04-02_1501_clean.csv')
 
 ##Setting Labels############################################
@@ -322,7 +320,7 @@ table(data$diag_curation_exp, data$res_curation_exp)
 
 data %>% filter(diag_curation_exp == "no") %>% 
   filter(res_curation_exp == "no") %>% summary()
-
+##################################
 ####experience level summary statistics ####
 summary(data$dem_yrs)
 mean(na.omit(data$dem_yrs))
@@ -363,7 +361,7 @@ exp_summary = c(col = "years_experience",
                 upper_bound =(mean(na.omit(data$dem_yrs))) + margin_error)
 exp_summary_df = type.convert(as.data.frame(rbind(exp_summary), row.names = TRUE), as.is = TRUE)
 
-########variant curators evaluation of FE #############
+#####################variant curators evaluation of FE
 #selected columns/rows
 #label(data$fe_activity_pd)="Evaluate functional data from a publicly available datasource or publication for research purposes"
 #label(data$fe_activity_cpd)="Curate functional evidence from a publicly available datasource or publication for the purpose of clinical variant classification"
@@ -731,7 +729,7 @@ learn_how %>%
   theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1), legend.position = "none")+
   labs(x = "", y = "no. participants", title = "Which resources would you use")
 
-##################FIGURES######################################################################
+
 ###FIGURE 1 --------------------------------------
 theme_set(theme_gray(base_size = 14))
 
@@ -772,7 +770,7 @@ plot_s = ggplot(data, aes(res_sviws.factor, fill = res_sviws.factor))+
 plot_v = ggplot(data, aes(res_vcep.factor, fill = res_vcep.factor))+
   geom_bar()+
   theme(legend.title = element_blank(), legend.position = "none")+
-  labs(x = "", y = "no. participants", title = "VCEP specific guidance on functional evidence")
+  labs(x = "", y = "no. participants", title = "VCEP specific guidance")
 
 # figure
 #plot_grid(plot_conf, plot_grid(b,w,s,v, align = "h", axis = "b", rel_widths = c(1,1),
@@ -780,47 +778,53 @@ plot_v = ggplot(data, aes(res_vcep.factor, fill = res_vcep.factor))+
   #                              ncol = 2,nrow = 2),align = "h", axis = "b", rel_widths = c(1, 1),rel_heights = c(1,1.5), labels = c("A", ""), ncol = 1, nrow = 2)
 
 # figure
-plot_grid(plot_conf, plot_grid(plot_b,NA,plot_w,NA,plot_s,NA, plot_v,NA, align = "h", axis = "b", rel_widths = c(1,0.5,1,0.5),
+plot_grid(plot_conf, plot_grid(plot_b,NA,plot_w,NA,plot_s,NA, plot_v,NA, align = "h", axis = "b", rel_widths = c(1.1,0.3,1.1,0.3),
                                labels = c("B","","C","","D","","E",""),
-                               ncol = 4,nrow = 2),axis = "b", rel_widths = c(1, 1),rel_heights = c(1,1), labels = c("A", ""), ncol = 1, nrow = 2)
+                               ncol = 4,nrow = 2),axis = "b", rel_heights = c(1,1.4), labels = c("A", ""), ncol = 1, nrow = 2)
 
 ggsave(path = "D:/project_functionalevidence/manuscript_needs/figures", 
        filename = paste(gsub(":", "-", Sys.Date()),"_fig1.png",sep=""), 
-       width = 12, height = 14, device='png', dpi=600)
+       width = 10, height = 10, device='png', dpi=600)
 
 
 #--Figure 2 -------------------------------------------------
 
 ###what people are looking for to support improvement
+theme_set(theme_gray(base_size = 12))
 
 #####graphing what would improve interaction with funtional evidence. 
 ggplot(improvedata2, aes(Improvement,Checked))+
   geom_col()
 
-#improvement
-plot_imp = improvedata2 %>% ggplot(., aes(x= reorder(Improvement,Checked, decreasing = FALSE), y=Checked, fill=Improvement)) + 
-  geom_col()+
-  coord_flip()+
-  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1),axis.text.y = element_text(size = 14), legend.position = "none")+
-  labs(x = "", y = "no. participants", title = "What would improve your interaction?")
-
 #barriers
 plot_bar = ggplot(barriers, aes(x= reorder(barrier_full,Checked, decreasing = FALSE), y=Checked, fill=barrier_full)) + 
   geom_col()+
   coord_flip()+
-  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1), axis.text.y = element_text(size = 14),legend.position = "none")+
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1), axis.text.y = element_text(size = 14),
+        plot.title = element_text(hjust = 4.7),
+        legend.position = "none")+
   labs(x = "", y = "no. participants", title = "Which might prevent your use of functional evidence?")
+
+#improvement
+plot_imp = improvedata2 %>% ggplot(., aes(x= reorder(Improvement,Checked, decreasing = FALSE), y=Checked, fill=Improvement)) + 
+  geom_col()+
+  coord_flip()+
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1),axis.text.y = element_text(size = 14), 
+        plot.title = element_text(hjust = -3.3),legend.position = "none")+
+  labs(x = "", y = "no. participants", title = "What would improve your interaction?")
 
 #preferred learning resources
 plot_lnh = learn_how %>% 
   ggplot(aes(x=reorder(learning_resources,Checked, decreasing = FALSE), y=Checked, fill=learning_resources)) + 
   geom_col()+
   coord_flip()+
-  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1), axis.text.y = element_text(size = 14),legend.position = "none")+
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1), axis.text.y = element_text(size = 14),
+        plot.title = element_text(hjust = -2.2),legend.position = "none")+
   labs(x = "", y = "no. participants", title = "Which resources would you use?")
 
 plot_grid(plot_bar,plot_imp,plot_lnh,align = "v", axis = "b", labels = c("A","B","C"),ncol = 1, nrow = 3)
 
 ggsave(path = "D:/project_functionalevidence/manuscript_needs/figures", 
        filename = paste(gsub(":", "-", Sys.Date()),"_fig2.png",sep=""), 
-       width = 8, height = 12, device='png', dpi=600)
+       width = 8, height = 9, device='png', dpi=600)
+
