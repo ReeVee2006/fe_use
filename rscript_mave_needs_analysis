@@ -1,7 +1,7 @@
 ##MAVE needs survey analysis 
 ##input data downloaded from redcap 02.04.24
 ##base annotation datasets in data folder
-##Author Rehan Villani - created v2 28.06.24
+##Author Rehan Villani - created v3 04.12.24
 
 #Clear existing data and graphics
 rm(list=ls())
@@ -9,10 +9,12 @@ graphics.off()
 library(tidyverse)
 library(cowplot)
 library(RColorBrewer)
+library(Hmisc)
+library(GenomicRanges)
+library(cowplot)
 
 #set up files--------------------------------------------
 #setwd 
-setwd("D:/project_functionalevidence/manuscript_needs/github_MAVE_needs")
 date = strftime(Sys.Date(),"%y%m%d")
 
 #Read Data
@@ -215,7 +217,7 @@ summary(as.factor(data$dem_pos_other))
 #graph of primary position as indicated
 ggplot(data, aes(dem_pos.factor, fill = dem_pos.factor))+
   geom_histogram(stat = "count") +
-  labs(x = "", y = "no. participants", title = "Primary professional position")
+  labs(x = "", y = "No. participants", title = "Primary professional position")
 
 #list of 'other' primary positions
 data$dem_pos_other[data$dem_pos_other==""] <- NA
@@ -267,21 +269,21 @@ summary(data$dem_group_adj)
 #graph of adjusted diagnostic variant curation activities performed correlated with dem_group
 ggplot(data, aes(dem_group_adj, fill = activity_vc.factor))+
   geom_histogram(stat = "count")+
-  labs(x = "", y = "no. participants", title = "Variant classification in diagnostic setting")
+  labs(x = "", y = "No. participants", title = "Variant classification in diagnostic setting")
 
 #label(data$activity_r)="Variant classification for research purposes"
 ggplot(data, aes(activity_r.factor, fill = dem_group))+
   geom_histogram(stat = "count")+
-  labs(x = "", y = "no. participants", title = "Variant classification in research setting")
+  labs(x = "", y = "No. participants", title = "Variant classification in research setting")
 
 #adjusted demographics
 ggplot(data, aes(activity_r.factor, fill = dem_group_adj))+
   geom_histogram(stat = "count")+
-  labs(x = "", y = "no. participants", title = "Variant classification in research setting")
+  labs(x = "", y = "No. participants", title = "Variant classification in research setting")
 
 ggplot(data, aes(dem_group_adj, fill = activity_r.factor))+
   geom_histogram(stat = "count")+
-  labs(x = "", y = "no. participants", title = "Variant classification in research setting")
+  labs(x = "", y = "No. participants", title = "Variant classification in research setting")
 
 
 ##################FIRST SECTION#######who is doing what#################################
@@ -294,21 +296,21 @@ summary(data$diag_curation_exp)
 
 ggplot(data, aes(diag_curation_exp))+
   geom_histogram(stat = "count")+
-  labs(x = "", y = "no. participants", title = "Participants performing diagnostic variant curation")
+  labs(x = "", y = "No. participants", title = "Participants performing diagnostic variant curation")
 
 #graph of research curation activities performed correlated with dem_group
 ggplot(data, aes(dem_group, fill = diag_curation_exp ))+
   geom_histogram(stat = "count")+
-  labs(x = "", y = "no. participants", title = "roles performing diagnostic variant curation")
+  labs(x = "", y = "No. participants", title = "roles performing diagnostic variant curation")
 
 #graph of dem groups that perform variant classification in diagnostic setting
 ggplot(data, aes(diag_curation_exp, fill = dem_group))+
   geom_histogram(stat = "count")+
-  labs(x = "", y = "no. participants", title = "roles performing diagnostic variant curation")
+  labs(x = "", y = "No. participants", title = "roles performing diagnostic variant curation")
 
 ggplot(data, aes(fe_activity_pd.factor, fill =diag_curation_exp))+
   geom_bar(stat = "count")+
-  labs(x = "", y = "no. participants", title = "")
+  labs(x = "", y = "No. participants", title = "")
 
 #separating into does and doesn't perform variant classification in research setting
 data$res_curation_exp = ifelse(data$activity_r.factor == "perform now", "yes", "no")
@@ -401,7 +403,7 @@ data %>% filter(fe_activity_cpd.factor == "do not perform") %>%
 #plot
 ggplot(data, aes(fe_activity_pd.factor))+
   geom_bar(stat = "count")+
-  labs(x = "", y = "no. participants", title = "Evaluate functional data fe_activity_pd.factor")
+  labs(x = "", y = "No. participants", title = "Evaluate functional data fe_activity_pd.factor")
 
 ####graphing
 #how many variant curators evaluation FE for research purposes
@@ -410,19 +412,19 @@ ggplot(data, aes(fe_activity_pd.factor))+
 #plot
 ggplot(data, aes(diag_curation_exp, fill =fe_activity_pd.factor))+
   geom_bar(stat = "count")+
-  labs(x = "", y = "no. participants", title = "Evaluate functional data from public source")
+  labs(x = "", y = "No. participants", title = "Evaluate functional data from public source")
 
 #do those with curation experience evaluate data from public source more often?
 ggplot(data, aes(diag_curation_exp, fill = fe_activity_pd.factor))+
   geom_bar(position = "dodge")+
-  labs(x = "diagnostic curation experience", y = "no. participants", title = "Functional data evaluation for research")
+  labs(x = "diagnostic curation experience", y = "No. participants", title = "Functional data evaluation for research")
 
 ##how many variant curators evaluate FE for clinical purposes
 #label(data$fe_activity_cpd)="Curate functional evidence from a publicly available datasource or publication for the purpose of clinical variant classification"
 #do those with curation experience evaluate data from public source more often?
 ggplot(data, aes(diag_curation_exp, fill = fe_activity_cpd.factor))+
   geom_bar(position = "dodge")+
-  labs(x = "diagnostic curation experience", y = "no. participants", title = "Functional data evaluation for clinical")
+  labs(x = "diagnostic curation experience", y = "No. participants", title = "Functional data evaluation for clinical")
 
 #figuring out how many interact with FE full stop (under any of the options)
 fe_qs = c("fe_activity_pd.factor","fe_activity_cpd.factor","fe_activity_ca.factor","fe_activity_rfed.factor", "fe_activity_rfer.factor")
@@ -454,7 +456,7 @@ fe_use
 #graph a summary accross fe use types
 ggplot(fe_use, aes(Method, `perform now`))+
   geom_col()+
-  labs(x = "", y = "no. participants", title = "FE uses")+
+  labs(x = "", y = "No. participants", title = "FE uses")+
   theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
 
 #make longer table (currently wider )
@@ -498,25 +500,25 @@ summary(data$res_vepmave.factor)
 b = ggplot(data, aes(res_brnich20.factor, fill = res_brnich20.factor))+
   geom_bar()+
   theme(legend.title = element_blank(), legend.position = "none")+
-  labs(x = "", y = "no. participants", title = "Brnich et al")
+  labs(x = "", y = "No. participants", title = "Brnich et al")
 b
 
 w = ggplot(data, aes(res_walker23.factor, fill = res_walker23.factor))+
   geom_bar()+
   theme(legend.title = element_blank(), legend.position = "none")+
-  labs(x = "", y = "no. participants", title = "Walker et al")
+  labs(x = "", y = "No. participants", title = "Walker et al")
 w
 
 s = ggplot(data, aes(res_sviws.factor, fill = res_sviws.factor))+
   geom_bar()+
   theme(legend.title = element_blank(), legend.position = "none")+
-  labs(x = "", y = "no. participants", title = "SVI WS")
+  labs(x = "", y = "No. participants", title = "SVI WS")
 s
 
 v = ggplot(data, aes(res_vcep.factor, fill = res_vcep.factor))+
   geom_bar()+
   theme(legend.title = element_blank(), legend.position = "none")+
-  labs(x = "", y = "no. participants", title = "VCEP")
+  labs(x = "", y = "No. participants", title = "VCEP")
 v
 
 ##################SECOND SECTION#######confidence###############################
@@ -555,7 +557,7 @@ data %>%
   ggplot(., aes((fetype_ba.factor), fill = fetype_ba.factor))+
   geom_bar()+
   theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))+
-  labs(x = "", y = "no. participants", title = "Comfort level with biochemical assay interpretation")
+  labs(x = "", y = "No. participants", title = "Comfort level with biochemical assay interpretation")
 sum(!is.na(data$fetype_ba.factor))
 
 assay_conf_list = c("not at all comfortable","not comfortable","somewhere in the middle","comfortable","very comfortable")
@@ -587,7 +589,7 @@ assay_type_conf_long %>%
   ggplot(aes(x=assay_type, y= count, fill=factor(comfort_level, levels = c(assay_conf_list)))) + 
   geom_bar(position = position_dodge2(reverse = FALSE), stat="identity")+
   theme(legend.title = element_blank())+
-  labs(x = "", y = "no. participants", title = "Comfort level with different functional evidence types")+
+  labs(x = "", y = "No. participants", title = "Comfort level with different functional evidence types")+
   scale_x_discrete(labels=c(assay_types_list))
 
 #summary statistics of confidence - grouped answers
@@ -628,7 +630,7 @@ improvedata2 %>% ggplot(., aes(x= reorder(Improvement,Checked, decreasing = FALS
   geom_col()+
   coord_flip()+
   theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1), legend.position = "none")+
-  labs(x = "", y = "no. participants", title = "What would improve your interaction?")
+  labs(x = "", y = "No. participants", title = "What would improve your interaction?")
 
 
 ##would you want further training
@@ -681,7 +683,7 @@ ggplot(barriers, aes(x= reorder(barrier_full,Checked, decreasing = FALSE), y=Che
   geom_col()+
   coord_flip()+
   theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1), legend.position = "none")+
-  labs(x = "", y = "no. participants", title = "Which might prevent your use of functional evidence")
+  labs(x = "", y = "No. participants", title = "Which might prevent your use of functional evidence")
        
 #what type of training
 #Which of the following training and/or additional resources would you use to increase/improve your use/understanding of applying functional evidence? (please select all that apply)
@@ -727,50 +729,52 @@ learn_how %>%
   geom_col()+
   coord_flip()+
   theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1), legend.position = "none")+
-  labs(x = "", y = "no. participants", title = "Which resources would you use")
+  labs(x = "", y = "No. participants", title = "Which resources would you use")
 
 
 ###FIGURE 1 --------------------------------------
-theme_set(theme_gray(base_size = 14))
+theme_set(theme_gray(base_size = 13))
 
 plot_conf = assay_type_conf_long %>% mutate(assay_type = factor(assay_type, levels = unique(assay_type))) %>%
   ggplot(aes(x=assay_type, y= count, fill=factor(comfort_level, levels = c(assay_conf_list)))) + 
   geom_bar(position = position_dodge2(reverse = FALSE), stat="identity")+
   theme(legend.title = element_blank())+
-  labs(x = "", y = "no. participants", title = "")+
+  labs(x = "", y = "No. participants", title = "")+
   scale_x_discrete(labels=c(assay_types_list))
 
 #graphing who is aware of which resources
 plot_b = ggplot(data, aes(res_brnich20.factor, fill = res_brnich20.factor))+
   geom_bar()+
   theme(legend.title = element_blank(), legend.position = "none")+
-  labs(x = "", y = "no. participants", title = "Brnich 2020 functional recommendations")
+  scale_y_continuous(breaks=c(0,5,10,15)) +
+  labs(x = "", y = "No. participants", title = "Brnich 2020 functional recommendations")
+plot_b
 
 #walker recommendations WITH NA result, 
 #ggplot(data, aes(res_walker23.factor, fill = res_walker23.factor))+
 #  geom_bar()+
 #  theme(legend.title = element_blank(), legend.position = "none")+
-#  labs(x = "", y = "no. participants", title = "Walker 2023 splicing recommendations")
+#  labs(x = "", y = "No. participants", title = "Walker 2023 splicing recommendations")
 
 plot_w = data %>% filter(res_walker23.factor != "NA") %>% ggplot(aes(res_walker23.factor, fill = res_walker23.factor))+
   geom_bar()+
   theme(legend.title = element_blank(), legend.position = "none")+
-  labs(x = "", y = "no. participants", title = "Walker 2023 splicing recommendations")
+  labs(x = "", y = "No. participants", title = "Walker 2023 splicing recommendations")
 
 plot_m = ggplot(data, aes(res_mavedb.factor, fill = res_mavedb.factor))+
   geom_bar()+
   theme(legend.title = element_blank(), legend.position = "none")+
-  labs(x = "", y = "no. participants", title = "")
+  labs(x = "", y = "No. participants", title = "")
 
 plot_s = ggplot(data, aes(res_sviws.factor, fill = res_sviws.factor))+
   geom_bar()+
   theme(legend.title = element_blank(), legend.position = "none")+
-  labs(x = "", y = "no. participants", title = "SVI functional assay worksheet")
+  labs(x = "", y = "No. participants", title = "SVI functional assay worksheet")
 
 plot_v = ggplot(data, aes(res_vcep.factor, fill = res_vcep.factor))+
   geom_bar()+
   theme(legend.title = element_blank(), legend.position = "none")+
-  labs(x = "", y = "no. participants", title = "VCEP specific guidance")
+  labs(x = "", y = "No. participants", title = "VCEP specific guidance")
 
 # figure
 #plot_grid(plot_conf, plot_grid(b,w,s,v, align = "h", axis = "b", rel_widths = c(1,1),
@@ -780,19 +784,23 @@ plot_v = ggplot(data, aes(res_vcep.factor, fill = res_vcep.factor))+
 # figure
 plot_grid(plot_conf, plot_grid(plot_b,NA,plot_w,NA,plot_s,NA, plot_v,NA, align = "h", axis = "b", rel_widths = c(1.1,0.3,1.1,0.3),
                                labels = c("B","","C","","D","","E",""),
-                               ncol = 4,nrow = 2),axis = "b", rel_heights = c(1,1.4), labels = c("A", ""), ncol = 1, nrow = 2)
+                               ncol = 4,nrow = 2),axis = "b", rel_heights = c(1,1.5), labels = c("A", ""), ncol = 1, nrow = 2)
 
 ggsave(path = "D:/project_functionalevidence/manuscript_needs/figures", 
        filename = paste(gsub(":", "-", Sys.Date()),"_fig1.png",sep=""), 
-       width = 10, height = 10, device='png', dpi=600)
+       width = 10, height = 10, device='png', dpi=1200)
 
+ggsave(path = "D:/project_functionalevidence/manuscript_needs/figures", 
+       filename = paste(gsub(":", "-", Sys.Date()),"_fig1.tiff",sep=""), 
+       width = 10, height = 10, device='tiff', dpi=1200)
 
+#####graphing what would improve interaction with funtional evidence. 
 #--Figure 2 -------------------------------------------------
 
 ###what people are looking for to support improvement
 theme_set(theme_gray(base_size = 12))
 
-#####graphing what would improve interaction with funtional evidence. 
+#####graphing what would improve interaction with functional evidence. 
 ggplot(improvedata2, aes(Improvement,Checked))+
   geom_col()
 
@@ -801,17 +809,17 @@ plot_bar = ggplot(barriers, aes(x= reorder(barrier_full,Checked, decreasing = FA
   geom_col()+
   coord_flip()+
   theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1), axis.text.y = element_text(size = 14),
-        plot.title = element_text(hjust = 4.7),
+        plot.title = element_text(hjust = 5.8),
         legend.position = "none")+
-  labs(x = "", y = "no. participants", title = "Which might prevent your use of functional evidence?")
+  labs(x = "", y = "No. participants", title = "Which might prevent your use of functional evidence?")
 
 #improvement
 plot_imp = improvedata2 %>% ggplot(., aes(x= reorder(Improvement,Checked, decreasing = FALSE), y=Checked, fill=Improvement)) + 
   geom_col()+
   coord_flip()+
   theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1),axis.text.y = element_text(size = 14), 
-        plot.title = element_text(hjust = -3.3),legend.position = "none")+
-  labs(x = "", y = "no. participants", title = "What would improve your interaction?")
+        plot.title = element_text(hjust = 5.8),legend.position = "none")+
+  labs(x = "", y = "No. participants", title = "What would improve your use of functional evidence?")
 
 #preferred learning resources
 plot_lnh = learn_how %>% 
@@ -819,12 +827,12 @@ plot_lnh = learn_how %>%
   geom_col()+
   coord_flip()+
   theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1), axis.text.y = element_text(size = 14),
-        plot.title = element_text(hjust = -2.2),legend.position = "none")+
-  labs(x = "", y = "no. participants", title = "Which resources would you use?")
+        plot.title = element_text(hjust = -2.7),legend.position = "none")+
+  labs(x = "", y = "No. participants", title = "Which resources would you use?")
 
 plot_grid(plot_bar,plot_imp,plot_lnh,align = "v", axis = "b", labels = c("A","B","C"),ncol = 1, nrow = 3)
 
 ggsave(path = "D:/project_functionalevidence/manuscript_needs/figures", 
-       filename = paste(gsub(":", "-", Sys.Date()),"_fig2.png",sep=""), 
-       width = 8, height = 9, device='png', dpi=600)
+       filename = paste(gsub(":", "-", Sys.Date()),"_fig2.tiff",sep=""), 
+       width = 8, height = 9, device='tiff', dpi=600)
 
