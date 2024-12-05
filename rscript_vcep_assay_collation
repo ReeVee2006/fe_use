@@ -1,7 +1,7 @@
 ##FE project
 ##input data downloaded from google sheet
 ##data collated from VCEP CSpec information manually by Maddison McKenzie and Rehan Villani
-##Author Rehan Villani - created 17.07.24
+##Author Rehan Villani - created 04.12.24
 
 #Clear existing data and graphics
 rm(list=ls())
@@ -58,37 +58,17 @@ ht_assays = filter(data, Number_var_total >1000)
 mave_assays = filter(data, MAVE_DB == "Yes")
 
 ####visualising the data
-
 ######investigating the number of assays and variants referenced in vceps####
 theme_set(theme_gray(base_size = 14))
 
 #graph the VCEP recommended advice for these assays
-#will need to correct the bar order
-data %>% 
-  ggplot(aes(x = PS3_evidence_weighting_Path,fill = PS3_evidence_weighting_Path)) + 
-  geom_bar()+
-  theme(axis.text.x = element_text(size = 14, angle = 45, hjust = 1))+ scale_y_continuous() +
-  labs(x = "", y = "number of assays", title = "PS3 Evidence level distribution in VCEP CSpecs")+
-  theme(legend.position = 'none')+
-  geom_text(stat='count', aes(label=after_stat(count), vjust=-1,size = 6))
-
-#will need to correct the bar order
-data %>% 
-  ggplot(aes(x = BS3_evidence_weighting_ben,fill = BS3_evidence_weighting_ben)) + 
-  geom_bar()+
-  theme(axis.text.x = element_text(size = 14, angle = 45, hjust = 1))+ scale_y_continuous() +
-  labs(x = "", y = "number of assays", title = "PS3 Evidence level distribution in VCEP CSpecs")+
-  theme(legend.position = 'none')+
-  geom_text(stat='count', aes(label=after_stat(count), vjust=-1,size = 6))
-
-#theme_set(theme_gray(base_size = 14))
 
 #graph the # assays per gene
 g = data %>% 
   ggplot(aes(x = fct_infreq(Gene),fill = fct_infreq(Gene))) + 
   geom_bar()+
   theme(axis.text.x = element_text(size = 14, angle = 45, hjust = 1))+
-  labs(x = "Gene", y = "number of assays", title = "Number of assays per gene")+
+  labs(x = "Gene", y = "No. assays", title = "Number of assays per gene")+
   theme(legend.position = 'none')+
   ylim(0,50)+
   geom_text(stat='count', aes(label=after_stat(count), vjust=-1,size = 6))
@@ -108,7 +88,7 @@ plot_vpg = var_p_gene %>%
   geom_col() +
   scale_y_log10()+
   theme(axis.text.x = element_text(size = 14, angle = 45, hjust = 1))+
-  labs(x = "Gene", y = "number of assays", title = "Number of variants assayed per gene in VCEP CSpecs")
+  labs(x = "Gene", y = "No. assays", title = "Number of variants assayed per gene in VCEP CSpecs")
 plot_vpg
 
 #graph the # variants per assay
@@ -120,7 +100,7 @@ plot_vpa = data %>%
   geom_col()+
   scale_y_sqrt()+
   theme(axis.text.x = element_blank())+
-  labs(x = "assay", y = "number of variants (log2)", title = "Number of variants per assay")+
+  labs(x = "Assay", y = "No. variants (log2)", title = "Number of variants per assay")+
   theme(legend.position = 'none')
 plot_vpa
 
@@ -148,7 +128,7 @@ var_n_groups$nvar_catgeory = factor(var_n_groups$nvar_catgeory, levels = c(">500
 var_n_groups %>% na.omit(nvar_catgeory) %>% 
   ggplot(aes(x = nvar_catgeory, y = var_n_p_grp))+
   geom_col()+
-  labs(x = "assay size (number of variants)", y = "number of assays", title = "Number of assays in size categories")+
+  labs(x = "assay size (No. variants)", y = "Number of assays", title = "Number of assays in size categories")+
   theme(legend.position = 'none')
 
 ######investigating the evidence strengths recommended###
@@ -175,14 +155,14 @@ summary(as.factor(data$PS3_ev_P_comb))
 #building columns for graph with conditions
 
 data$PS3_ev_levelsum = case_when(
-  data$PS3_evidence_weighting_Path == "very strong, strong, moderate and supporting " ~ "very strong",
-  data$PS3_evidence_weighting_Path == "strong" ~ "strong",
-  data$PS3_evidence_weighting_Path == "strong, moderate and supporting" ~ "strong",
-  data$PS3_evidence_weighting_Path == "strong and supporting" ~ "strong",
-  data$PS3_evidence_weighting_Path == "moderate" ~ "moderate",
-  data$PS3_evidence_weighting_Path == "moderate with conditions" ~ "moderate",
-  data$PS3_evidence_weighting_Path == "moderate and supporting" ~ "moderate",
-  data$PS3_evidence_weighting_Path == "supporting" ~ "supporting")
+  data$PS3_evidence_weighting_Path == "very strong, strong, moderate and supporting " ~ "Very strong",
+  data$PS3_evidence_weighting_Path == "strong" ~ "Strong",
+  data$PS3_evidence_weighting_Path == "strong, moderate and supporting" ~ "Strong",
+  data$PS3_evidence_weighting_Path == "strong and supporting" ~ "Strong",
+  data$PS3_evidence_weighting_Path == "moderate" ~ "Moderate",
+  data$PS3_evidence_weighting_Path == "moderate with conditions" ~ "Moderate",
+  data$PS3_evidence_weighting_Path == "moderate and supporting" ~ "Moderate",
+  data$PS3_evidence_weighting_Path == "supporting" ~ "Supporting")
 
 data$PS3_ev_levelsum_cond = case_when(
   data$PS3_evidence_weighting_Path == "very strong, strong, moderate and supporting " ~ "conditional",
@@ -209,11 +189,11 @@ data$BS3_ev_B_comb = case_when(
 
 #building columns for graph with conditions
 data$BS3_ev_levelsum = case_when(
-  data$BS3_evidence_weighting_ben == "strong" ~ "strong",
-  data$BS3_evidence_weighting_ben == "strong and supporting" ~ "strong",
-  data$BS3_evidence_weighting_ben == "moderate with conditions" ~ "moderate",
-  data$BS3_evidence_weighting_ben == "supporting" ~ "supporting",
-  data$BS3_evidence_weighting_ben == "none" ~ "none")
+  data$BS3_evidence_weighting_ben == "strong" ~ "Strong",
+  data$BS3_evidence_weighting_ben == "strong and supporting" ~ "Strong",
+  data$BS3_evidence_weighting_ben == "moderate with conditions" ~ "Moderate",
+  data$BS3_evidence_weighting_ben == "supporting" ~ "Supporting",
+  data$BS3_evidence_weighting_ben == "none" ~ "None")
 
 data$BS3_ev_levelsum_cond = case_when(
   data$BS3_evidence_weighting_ben == "strong" ~ "defined",
@@ -235,7 +215,7 @@ summary(data$PS3_evidence_weighting_Path)
 #graph of the evidence level recommended by the VCEPs - pathogenic
 summary(data$BS3_evidence_weighting_ben)
 summary(as.factor(data$PS3_ev_P_comb))
-evidence_order = c("very strong","strong","moderate","supporting","none")
+evidence_order = c("Very strong","Strong","Moderate","Supporting","None")
 
 #redo graph of pathogenic evidence levels but with the conditional evidence application separate
 days_levels <- evidence_order
@@ -247,7 +227,7 @@ p3 = data %>%
   coord_flip()+
   theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))+ 
   scale_y_continuous() + scale_x_discrete(drop = FALSE)+
-  labs(x = "", y = "number of assays", title = "PS3 evidence levels")+
+  labs(x = "", y = "Number of assays", title = "PS3 evidence levels")+
   theme(legend.position = 'none')+
   scale_fill_manual(values = c("orange","#00BA38","blue3","darkgreen","#2297E6","hotpink","#F8766D"))
 
@@ -263,7 +243,7 @@ b3 = data %>%
   coord_flip()+
   theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))+ 
   scale_y_continuous() + scale_x_discrete(drop = FALSE)+
-  labs(x = "", y = "number of assays", title = "BS3 evidence levels")+
+  labs(x = "", y = "Number of assays", title = "BS3 evidence levels")+
   theme(legend.position = 'none')+
   scale_fill_manual(values = c("#F8766D","orange","#00BA38","darkgreen","#2297E6","blue3","hotpink"))
 
@@ -271,5 +251,6 @@ b3 = data %>%
 plot_grid(g, plot_vpa, plot_grid(p3,b3, NULL,align = "hv", axis = "b", labels = c("C","D"),ncol = 2, nrow = 1), align = "h", axis = "b", labels = c("A", "B"),ncol = 1, nrow = 3, rel_heights = c(1,1,1.1))
 
 ggsave(path = "D:/project_functionalevidence/manuscript_needs/figures", 
-       filename = paste(gsub(":", "-", Sys.Date()),"_fig3.png",sep=""), 
-       width = 10, height = 10, device='png', dpi=600)
+       filename = paste(gsub(":", "-", Sys.Date()),"_fig3.tiff",sep=""), 
+       width = 10, height = 10, device='tiff', dpi=600)
+
