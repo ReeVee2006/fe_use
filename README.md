@@ -24,7 +24,7 @@ ClinGen VCEP Criteria Specifications; https://cspec.genome.network/cspec/ui/svi/
 
 ## Additional data access 
 
-Redcap survey collection instrument: The Functional Evidence Use survey (by the OzMAVE Education project) collection instrument can be found as Supplementary information 1 - Villani et al 2024.
+Redcap survey collection instrument: The Functional Evidence Use survey (by the AusMAVE Education project) collection instrument can be found as Supplementary information 1 - Villani et al 2024.
 
 Redcap survey data: Collected via Redcap data collection instrument. Access to full data will be considered upon request if appropriate approvals are in place.
 
