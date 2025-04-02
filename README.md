@@ -18,7 +18,7 @@ R packages; tidyverse 2.0.0, cowplot 1.1.3, Rcolorbrewer 1.1.3
 
 ## Data provided 
 
-20240716_CSpecCollation_clean_Villani24SuppT1; Data has been generated via collating specific assay information within the ClinGen VCEP Criteria Specification documents
+20240716_CSpecCollation_clean_Villani24SuppT1; Supplementary Table 1 in Villani et al. 2024. Data has been generated via collating specific assay information within the ClinGen VCEP Criteria Specification documents
 
 ClinGen VCEP Criteria Specifications; https://cspec.genome.network/cspec/ui/svi/
 
